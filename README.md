@@ -154,32 +154,71 @@ answer — all logged with `[TCP_FALLBACK]`.
 
 ---
 
-### Feature 4: Negative caching (NXDOMAIN)
+### Feature 4: Negative caching (NXDOMAIN and NODATA)
 
-**What it does** — When upstream says a name does not exist
-(**NXDOMAIN**), the resolver caches that fact briefly so it does not
-hammer upstream for the same nonexistent name.
+**What it does** — When upstream says a domain does not exist
+(**NXDOMAIN**) *or* exists but has no records of that type
+(**NODATA** — NOERROR with an empty answer), the resolver caches that
+fact so it does not hammer upstream for the same non-answering name.
+Both cases use the SOA `minimum` TTL (capped at 300 s) per RFC 2308.
 
 **How to test it**
 
 1. `python run.py` → option **1**.
-2. In a second terminal:
+2. In a second terminal — run each command **twice**:
 
 ```bash
+# NODATA case: the subdomain does not have an A record (NOERROR + SOA authority)
 dig @127.0.0.1 -p 55353 doesnotexist.example.com A +tries=1 +retry=0 +time=8
 dig @127.0.0.1 -p 55353 doesnotexist.example.com A +tries=1 +retry=0 +time=8
+
+# NXDOMAIN case: the domain truly does not exist
+dig @127.0.0.1 -p 55353 nxdomain.test A +tries=1 +retry=0 +time=8
+dig @127.0.0.1 -p 55353 nxdomain.test A +tries=1 +retry=0 +time=8
 ```
 
-**What you should see**
+**What you should see** (server stderr)
 
 ```
-[CACHE_MISS]  35.20ms  …  qname=doesnotexist.example.com. qtype=A
-[CACHE_HIT]    0.05ms  …  qname=doesnotexist.example.com. qtype=A  negative
+[CACHE_MISS]  82.00ms upstream=1.1.1.1 qname=doesnotexist.example.com. qtype=A
+[CACHE_HIT]    0.18ms upstream=1.1.1.1 qname=doesnotexist.example.com. qtype=A
+[CACHE_MISS]  55.30ms upstream=1.1.1.1 qname=nxdomain.test. qtype=A
+[CACHE_HIT]    0.08ms upstream=1.1.1.1 qname=nxdomain.test. qtype=A   negative
 ```
 
-**What just happened** — The first query got NXDOMAIN from upstream and
-cached it (TTL = min(300, SOA minimum) or 60 s). The second query found
-the negative cache entry and replied immediately.
+`dig` stdout for the **NODATA** case (both queries):
+
+```
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 12345
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 1, ADDITIONAL: 0
+
+;; AUTHORITY SECTION:
+example.com.   1728  IN  SOA  elliott.ns.cloudflare.com. dns.cloudflare.com. ...
+
+;; Query time: 82 msec   ← first query (cache miss)
+;; Query time: 0 msec    ← second query (cache hit)
+```
+
+`dig` stdout for the **NXDOMAIN** case:
+
+```
+;; ->>HEADER<<- opcode: QUERY, status: NXDOMAIN, id: 23456
+;; flags: qr rd ra; QUERY: 1, ANSWER: 0, AUTHORITY: 0, ADDITIONAL: 0
+
+;; Query time: 55 msec   ← first query (cache miss)
+;; Query time: 0 msec    ← second query (cache hit)
+```
+
+**What just happened**
+
+- **NODATA** (`doesnotexist.example.com`): `example.com`'s DNS server
+  returns NOERROR with an SOA in the authority section — it confirms the
+  subdomain has no A record. The resolver cached this response for the
+  SOA minimum TTL (typically ~30–60 s). The second query was served from
+  cache instantly.
+- **NXDOMAIN** (`nxdomain.test`): The `.test` TLD truly does not exist,
+  so upstream returns NXDOMAIN. The resolver cached that as a negative
+  entry. The second query returned the cached NXDOMAIN instantly.
 
 ---
 

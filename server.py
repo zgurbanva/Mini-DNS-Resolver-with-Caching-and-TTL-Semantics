@@ -288,6 +288,12 @@ class StubResolverDatagramProtocol(asyncio.DatagramProtocol):
             elif resp.rcode() == dns.rcode.NOERROR:
                 if cache_mod.min_ttl_for_qtype(resp, qname, qtype) > 0:
                     self._cache.store_positive(qname, qtype, resp)
+                elif (
+                    not resp.answer
+                    and any(rrset.rdtype == dns.rdatatype.SOA for rrset in resp.authority)
+                ):
+                    # NODATA: name exists but no records of this type; cache per RFC 2308 §5
+                    self._cache.store_nodata(qname, qtype, resp)
 
         self._send_wire(out, peer, t0, qname=qname_s, qtype=qtype_s)
 

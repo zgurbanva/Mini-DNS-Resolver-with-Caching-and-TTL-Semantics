@@ -118,6 +118,16 @@ class DNSCache:
         self._negative.move_to_end(key)
         self._evict_negative_lru()
 
+    def store_nodata(self, qname: dns.name.Name, rdtype: int, response: dns.message.Message) -> None:
+        """Cache a NODATA response (NOERROR + empty answer + SOA authority) per RFC 2308 §5."""
+        ttl = negative_cache_ttl_sec(response)
+        ttl = max(1, self._maybe_cap_ttl(ttl))
+        expires_at = self._mono() + float(ttl)
+        key = (_normalize_name(qname), rdtype)
+        self._positive[key] = PositiveCacheEntry(message=copy.deepcopy(response), expires_at=expires_at)
+        self._positive.move_to_end(key)
+        self._evict_positive_lru()
+
 
 def min_ttl_for_qtype(msg: dns.message.Message, qname: dns.name.Name, rdtype: int) -> int:
     """Minimum TTL among answer RRsets matching the query name and type."""
