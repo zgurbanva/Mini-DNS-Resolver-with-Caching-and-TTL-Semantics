@@ -12,7 +12,7 @@ import dns.rdataclass
 import dns.rdatatype
 import dns.rrset
 
-import protocol as protocol_mod
+from src import protocol as protocol_mod
 
 
 def test_query_upstream_tcp_fallback_on_tc() -> None:

@@ -9,7 +9,7 @@ import dns.rcode
 import dns.rdatatype
 import dns.rrset
 
-import cache as cache_mod
+from src import cache as cache_mod
 
 
 def _mono_factory(start: float = 1000.0):

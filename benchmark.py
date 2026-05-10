@@ -7,7 +7,7 @@ Warm runs: repeat the same query without flushing.
 
 Example:
   Terminal A: python server.py --port 55353 --upstream 1.1.1.1
-  Terminal B: python scripts/benchmark.py --pid $(pgrep -f 'python server.py') --port 55353
+  Terminal B: python benchmark.py --pid <PID from terminal A> --port 55353
 """
 
 from __future__ import annotations

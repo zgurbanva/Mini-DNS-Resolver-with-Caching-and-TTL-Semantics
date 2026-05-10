@@ -21,6 +21,16 @@ pip install -r requirements.txt
 python run.py
 ```
 
+**Advanced:** to run the resolver **without** the menu, stay in the **repository root** and use either:
+
+```bash
+python server.py --port 55353 --upstream 1.1.1.1
+# same effect:
+python -m src.server --port 55353 --upstream 1.1.1.1
+```
+
+The real implementation lives in **`src/`**. The root `server.py` is a small launcher so older docs and copy-paste still work. **Do not** run `python src/server.py` — that sets the wrong import path and fails with `No module named 'src'`.
+
 Pick **option 1** ("Start the resolver — basic, UDP upstream").
 The script finds a free port, starts the server, and prints `dig` commands
 (with **`+time=8`**) you can paste in a **second terminal** to test it.
@@ -37,7 +47,7 @@ flowchart LR
 
 ISC `dig` defaults to **`+time=5`**: it stops waiting for a UDP answer after **5 seconds per try**.
 
-This resolver’s upstream path uses **`--timeout 5`** (seconds) by default (`server.py`). When upstream fails (for example **DoT** blocked on TCP **853**), the stub finishes work at about **5001–5010 ms** and then sends **SERVFAIL** back to `dig`.
+This resolver’s upstream path uses **`--timeout 5`** (seconds) by default (`src/server.py`). When upstream fails (for example **DoT** blocked on TCP **853**), the stub finishes work at about **5001–5010 ms** and then sends **SERVFAIL** back to `dig`.
 
 If your `dig` line only uses the default 5 s wait, **`dig` can time out at ~5.0 s while the server replies at ~5.003 s**. You see **`;; connection timed out; no servers could be reached`**, which looks like “nothing is listening,” even though the server is up and logged **`[ERROR] … Upstream timeout or protocol failure`**.
 
@@ -51,7 +61,9 @@ Every section below follows the same pattern: **what** the feature does,
 **how to test it**, **what you should see**, and a short **explanation**.
 
 > **Tip:** Most features can be tested via `python run.py` (choose the
-> relevant menu option) plus a `dig` command in a second terminal. All
+> relevant menu option) plus a `dig` command in a second terminal. Run
+> every command from the **repository root** (the directory that contains
+> `run.py` and `src/`). All
 > `dig` lines use **`+time=8`** so the client waits longer than the server’s
 > default **5 s** upstream timeout — see **Why every dig example uses +time=8** above.
 
@@ -546,7 +558,7 @@ and refresh the page to see updated stats.
 
 ### Feature 14: Docker
 
-**How to test it**
+**How to test it** — from the **repository root** (where `compose.yml` lives):
 
 ```bash
 docker compose up --build
@@ -561,7 +573,7 @@ host port **55353** to it.
 ## Running tests
 
 ```bash
-pytest -q
+python -m pytest tests/ -q
 ```
 
 Or via the menu:
@@ -574,21 +586,24 @@ python run.py        # option 8
 
 ## Project file map
 
+All commands below assume your **current working directory is the repository root** (the folder that contains `run.py`, `server.py`, and `src/`).
+
 | File / folder | Purpose |
 |---|---|
 | `run.py` | **Start here.** Interactive Rich menu — picks the right flags for you. |
-| `server.py` | Asyncio UDP resolver: listens, caches, forwards to upstream. |
-| `cache.py` | In-memory TTL cache for A/AAAA + negative (NXDOMAIN) cache. |
-| `protocol.py` | Upstream transport: UDP (+TCP on TC), DoT, DoH. |
-| `stats.py` | Thread-safe counters + recent-query ring buffer. |
-| `policy.py` | Blocklist / allowlist (suffix matching). |
+| `server.py` | Thin launcher at repo root; runs the same code as `python -m src.server`. |
+| `src/server.py` | Asyncio UDP resolver: listens, caches, forwards to upstream. |
+| `src/cache.py` | In-memory TTL cache for A/AAAA + negative (NXDOMAIN / NODATA) cache. |
+| `src/protocol.py` | Upstream transport: UDP (+TCP on TC), DoT, DoH. |
+| `src/stats.py` | Thread-safe counters + recent-query ring buffer. |
+| `src/policy.py` | Blocklist / allowlist (suffix matching). |
+| `src/utils.py` | Rich logging, optional JSON lines, trace diagnostics. |
+| `src/dashboard.py` | Optional FastAPI web UI (started with `--dashboard`). |
 | `blocklist.txt` | Sample blocked domains (used by `run.py` option 4). |
-| `dashboard.py` | Optional FastAPI web UI. |
 | `demo.py` | Scripted cold/warm/TTL/TC demonstrations. |
-| `scripts/benchmark.py` | Warm + cold latency measurement. |
-| `Dockerfile` / `compose.yml` | Container build and run. |
-| `requirements.txt` | Core deps: dnspython, rich, pytest, httpx. |
-| `requirements-dashboard.txt` | FastAPI + uvicorn (for the dashboard). |
+| `benchmark.py` | Warm + cold latency measurement (used by `run.py` option 7). |
+| `Dockerfile` / `compose.yml` | Container build and run (`python -m src.server` inside the image). |
+| `requirements.txt` | All dependencies: resolver, tests, httpx/h2 (DoH), FastAPI/uvicorn (dashboard). |
 | `tests/` | pytest test suite. |
 
 ---

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import dns.name
 
-import policy as policy_mod
+from src import policy as policy_mod
 
 
 def test_blocklist_suffix() -> None:

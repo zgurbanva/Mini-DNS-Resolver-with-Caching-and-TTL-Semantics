@@ -16,11 +16,11 @@ import dns.rdataclass
 import dns.rdatatype
 import dns.rrset
 
-import policy as policy_mod
-import protocol
-import stats as stats_mod
-import utils
-from server import run_udp_server
+from src import policy as policy_mod
+from src import protocol
+from src import stats as stats_mod
+from src import utils
+from src.server import run_udp_server
 
 
 def _embedded_upstream(upstream: str, timeout: float) -> protocol.UpstreamConfig:

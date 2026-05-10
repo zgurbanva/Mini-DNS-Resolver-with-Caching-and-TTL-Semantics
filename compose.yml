@@ -5,4 +5,4 @@ services:
       - "55353:5353/udp"
     environment:
       - DNS_RESOLVER_DEMO_MAX_TTL=
-    command: ["python", "server.py", "--bind", "0.0.0.0", "--port", "5353", "--upstream", "1.1.1.1"]
+    command: ["python", "-m", "src.server", "--bind", "0.0.0.0", "--port", "5353", "--upstream", "1.1.1.1"]

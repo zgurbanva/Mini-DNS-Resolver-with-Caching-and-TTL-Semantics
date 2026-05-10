@@ -8,7 +8,7 @@ import dns.rdataclass
 import dns.rdatatype
 import dns.rrset
 
-import cache as cache_mod
+from src import cache as cache_mod
 
 
 def _resp_a(qn: dns.name.Name, ip: str, ttl: int = 60) -> dns.message.Message:

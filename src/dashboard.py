@@ -1,4 +1,4 @@
-"""Optional FastAPI dashboard (run with `python server.py --dashboard 127.0.0.1:8080`)."""
+"""Optional FastAPI dashboard (``python server.py --dashboard 127.0.0.1:8080`` from repo root)."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ def start_dashboard(bind_host: str, port: int, snapshot: SnapshotFn) -> threadin
         import uvicorn
     except ImportError as exc:  # pragma: no cover
         raise RuntimeError(
-            "Dashboard requires FastAPI and uvicorn. Install: pip install -r requirements-dashboard.txt",
+            "Dashboard requires FastAPI and uvicorn. Install: pip install -r requirements.txt",
         ) from exc
 
     app = FastAPI(title="Mini DNS Resolver", docs_url=None, redoc_url=None)

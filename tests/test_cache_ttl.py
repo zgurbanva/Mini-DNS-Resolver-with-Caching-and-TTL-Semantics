@@ -9,7 +9,7 @@ import dns.rdatatype
 import dns.rcode
 import dns.rrset
 
-import cache as cache_mod
+from src import cache as cache_mod
 
 
 def _sample_positive_response(qname: dns.name.Name, ttl: int = 120) -> dns.message.Message:

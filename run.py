@@ -100,7 +100,7 @@ def _ensure_venv_deps(requirements_file: str) -> bool:
 
 
 def _run_server(extra_args: list[str], *, port: int | None = None) -> None:
-    """Start server.py with the given extra args. Never returns (exec)."""
+    """Start server.py (root wrapper → src.server) with the given extra args. Never returns (exec)."""
     if port is None:
         port = _find_free_port()
     cmd = [sys.executable, "server.py", "--port", str(port)] + extra_args
@@ -186,7 +186,7 @@ def action_benchmark() -> None:
     try:
         console.print("[dim]Running warm + cold passes …[/dim]\n")
         subprocess.call([
-            sys.executable, "scripts/benchmark.py",
+            sys.executable, "benchmark.py",
             "--host", "127.0.0.1",
             "--port", str(port),
             "--pid", str(server_proc.pid),
@@ -206,7 +206,7 @@ def action_tests() -> None:
 
 
 def action_dashboard() -> None:
-    if not _ensure_venv_deps("requirements-dashboard.txt"):
+    if not _ensure_venv_deps("requirements.txt"):
         return
     port = _find_free_port()
     dash_port = 8080
