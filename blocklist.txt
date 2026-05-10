@@ -1,0 +1,10 @@
+# Sample blocklist — domains listed here return NXDOMAIN.
+# One domain per line.  Subdomains are also blocked automatically
+# (e.g. "ads.example.com" also blocks "x.ads.example.com").
+# Edit freely; changes take effect next time the server starts.
+
+ads.example.com
+tracker.example.com
+malware.example.net
+doubleclick.net
+ad.doubleclick.net
