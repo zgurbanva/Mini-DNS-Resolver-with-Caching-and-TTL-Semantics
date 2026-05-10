@@ -32,3 +32,9 @@ build/
 
 # Logs
 *.log
+
+# Node (Next.js web companion)
+web/node_modules/
+web/.next/
+web/out/
+web/coverage/

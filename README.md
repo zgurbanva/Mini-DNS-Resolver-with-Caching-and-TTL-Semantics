@@ -43,6 +43,10 @@ flowchart LR
     B -->|cached answer| A
 ```
 
+### Web companion (Vercel)
+
+A beginner-friendly **Next.js** app in the [`web/`](web/) folder mirrors README concepts (lookups, cache, blocklists) using **DNS-over-HTTPS** on the server. It does **not** replace the UDP Python resolver — see [`web/README.md`](web/README.md) for deploy steps (set Vercel **Root Directory** to `web`).
+
 ## Why every dig example uses +time=8
 
 ISC `dig` defaults to **`+time=5`**: it stops waiting for a UDP answer after **5 seconds per try**.
@@ -604,6 +608,7 @@ All commands below assume your **current working directory is the repository roo
 | `benchmark.py` | Warm + cold latency measurement (used by `run.py` option 7). |
 | `Dockerfile` / `compose.yml` | Container build and run (`python -m src.server` inside the image). |
 | `requirements.txt` | All dependencies: resolver, tests, httpx/h2 (DoH), FastAPI/uvicorn (dashboard). |
+| `web/` | Next.js **Vercel** companion: DoH lookups, learn/play pages — see `web/README.md`. |
 | `tests/` | pytest test suite. |
 
 ---
