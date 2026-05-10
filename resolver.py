@@ -12,6 +12,19 @@ from queue import Queue
 from dnslib import DNSRecord, RCODE, QTYPE
 
 CACHE_FILE = 'cache.json'
+LOG_FILE = 'resolver.log'
+# Clear log on startup
+with open(LOG_FILE, 'w') as f:
+    f.write("[SYSTEM] Resolver logging initialized...\n")
+
+def dprint(msg):
+    print(msg)
+    try:
+        with open(LOG_FILE, 'a') as f:
+            f.write(msg + '\n')
+    except:
+        pass
+
 UPSTREAM_SERVERS = [('8.8.8.8', 53), ('1.1.1.1', 53)]
 NEGATIVE_CACHE_TTL = 60  # seconds
 
@@ -54,9 +67,9 @@ class DnsCache:
             try:
                 with open(CACHE_FILE, 'w') as f:
                     json.dump(valid_entries, f)
-                print(f"[CACHE] Saved {len(valid_entries)} entries to {CACHE_FILE}")
+                dprint(f"[CACHE] Saved {len(valid_entries)} entries to {CACHE_FILE}")
             except Exception as e:
-                print(f"[CACHE] Failed to save cache: {e}")
+                dprint(f"[CACHE] Failed to save cache: {e}")
 
     def load_cache(self):
         if os.path.exists(CACHE_FILE):
@@ -71,9 +84,9 @@ class DnsCache:
                         qname, str_qtype = k_str.split('|')
                         self.entries[(qname, int(str_qtype))] = v
                         loaded += 1
-                print(f"[CACHE] Loaded {loaded} valid entries from {CACHE_FILE}")
+                dprint(f"[CACHE] Loaded {loaded} valid entries from {CACHE_FILE}")
             except Exception as e:
-                print(f"[CACHE] Failed to load cache: {e}")
+                dprint(f"[CACHE] Failed to load cache: {e}")
 
 class MiniDNSResolver:
     def __init__(self, host='127.0.0.1', port=5053):
@@ -96,6 +109,7 @@ class MiniDNSResolver:
 
     def fetch_upstream(self, query_data):
         upstream = self.get_upstream()
+        dprint(f"[UPSTREAM] Dispatching to {upstream[0]}:{upstream[1]}")
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
             s.settimeout(2.0)
             try:
@@ -103,7 +117,7 @@ class MiniDNSResolver:
                 response_data, _ = s.recvfrom(4096)
                 return response_data
             except Exception as e:
-                print(f"[ERROR] Upstream fetch failed: {e}")
+                dprint(f"[ERROR] Upstream fetch failed: {e}")
                 return None
 
     def process_upstream_response(self, response_data, qname, qtype):
@@ -134,14 +148,14 @@ class MiniDNSResolver:
             return record
             
         except Exception as e:
-            print(f"[ERROR] Parsing response failed: {e}")
+            dprint(f"[ERROR] Parsing response failed: {e}")
             return None
 
     def prefetch_worker(self):
         while self.running:
             try:
                 qname, qtype, query_data = self.prefetch_queue.get(timeout=1.0)
-                print(f"[*] Prefetching {qname} ({QTYPE[qtype]})...")
+                dprint(f"[*] Prefetching {qname} ({QTYPE[qtype]})...")
                 response_data = self.fetch_upstream(query_data)
                 self.process_upstream_response(response_data, str(qname), qtype)
                 self.prefetch_queue.task_done()
@@ -150,6 +164,7 @@ class MiniDNSResolver:
 
     def handle_request(self, data, addr):
         t_start = time.perf_counter()
+        dprint(f"[UDP] Received {len(data)} byte Datagram from {addr[0]}:{addr[1]}")
         
         try:
             query = DNSRecord.parse(data)
@@ -181,7 +196,11 @@ class MiniDNSResolver:
                 
                 t_finish = time.perf_counter()
                 latency_ms = (t_finish - t_start) * 1000
-                print(f"{qname: <25} | [{status: <7}] | TTL: {time_remaining:05.1f}s | Latency: {latency_ms:.2f} ms")
+                
+                ips = [str(rr.rdata) for rr in response_record.rr if getattr(rr, 'rtype', 1) == 1]
+                ip_str = ", ".join(ips) if ips else "No A-Records"
+                
+                dprint(f"{qname: <25} | [{status: <7}] | TTL: {time_remaining:05.1f}s | Latency: {latency_ms:.2f} ms | IPs: {ip_str}")
                 
             else:
                 status = cache_result # 'MISS' or 'EXPIRED'
@@ -204,24 +223,27 @@ class MiniDNSResolver:
                 t_finish = time.perf_counter()
                 latency_ms = (t_finish - t_start) * 1000
                 
-                print(f"{qname: <25} | [{status: <7}] | Fetched/Refetched | Latency: {latency_ms:.2f} ms")
+                ips = [str(rr.rdata) for rr in response_record.rr if getattr(rr, 'rtype', 1) == 1]
+                ip_str = ", ".join(ips) if ips else "No A-Records"
+                
+                dprint(f"{qname: <25} | [{status: <7}] | Fetched/Refetched | Latency: {latency_ms:.2f} ms | IPs: {ip_str}")
 
         except Exception as e:
-            print(f"[ERROR] Request handling failed: {e}")
+            dprint(f"[ERROR] Request handling failed: {e}")
 
 
     def run(self):
-        print(f"[*] Mini DNS Resolver running on {self.host}:{self.port}")
+        dprint(f"[*] Mini DNS Resolver running on {self.host}:{self.port}")
         while self.running:
             try:
                 data, addr = self.socket.recvfrom(4096)
                 threading.Thread(target=self.handle_request, args=(data, addr)).start()
             except Exception as e:
                 if self.running:
-                    print(f"[ERROR] recvfrom: {e}")
+                    dprint(f"[ERROR] recvfrom: {e}")
 
     def shutdown(self, signum, frame):
-        print("\n[*] Shutting down Gracefully...")
+        dprint("\n[*] Shutting down Gracefully...")
         self.running = False
         self.cache.save_cache()
         sys.exit(0)

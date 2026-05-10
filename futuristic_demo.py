@@ -45,6 +45,10 @@ def resolver_reader(proc):
                 resolver_logs.append(f"[yellow]{decoded}[/]")
             elif "ERROR" in decoded:
                 resolver_logs.append(f"[red]{decoded}[/]")
+            elif "UPSTREAM" in decoded:
+                resolver_logs.append(f"[magenta]{decoded}[/]")
+            elif "UDP" in decoded:
+                resolver_logs.append(f"[bold blue]{decoded}[/]")
             else:
                 resolver_logs.append(f"[cyan]{decoded}[/]")
     proc.stdout.close()
@@ -184,6 +188,11 @@ def update_layout(layout):
     ))
 
 if __name__ == "__main__":
+    # Ensure no other resolver is explicitly blocking the port
+    import os
+    os.system("pkill -f resolver.py || true")
+    time.sleep(1)
+
     # Start resolver as subprocess, unbuffered (-u) so we read logs instantly
     proc = subprocess.Popen(
         [sys.executable, "-u", "resolver.py"], 

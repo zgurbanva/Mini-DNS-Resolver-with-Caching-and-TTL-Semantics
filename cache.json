@@ -1,1 +1,26 @@
-{"nonexistent.domain.xyz.|1": {"packet": "J0WBgAABAAQAAAAAC25vbmV4aXN0ZW50BmRvbWFpbgN4eXoAAAEAAcAMAAEAAQAABwgABGAtUwvADAABAAEAAAcIAARgLVOGwAwAAQABAAAHCAAEYC1SPMAMAAEAAQAABwgABGAtUu8=", "absolute_expiry": 1776409469.574786, "soft_ttl": 1776409289.574786, "is_negative": false}, "example.com.|1": {"packet": "+j6BgAABAAIAAAAAB2V4YW1wbGUDY29tAAABAAHADAABAAEAAAD+AARoFBeawAwAAQABAAAA/gAErEKT8w==", "absolute_expiry": 1776408918.562656, "soft_ttl": 1776408893.1626558, "is_negative": false}, "google.com.|1": {"packet": "Ku6BgAABAAEAAAAABmdvb2dsZQNjb20AAAEAAcAMAAEAAQAAAL4ABKzZF44=", "absolute_expiry": 1776408927.6880739, "soft_ttl": 1776408908.6880739, "is_negative": false}, "github.com.|1": {"packet": "GN+BgAABAAEAAAAABmdpdGh1YgNjb20AAAEAAcAMAAEAAQAAABwABIxSeQQ=", "absolute_expiry": 1776408768.140445, "soft_ttl": 1776408765.340445, "is_negative": false}}
+{
+    "nonexistent.domain.xyz.|1": {
+        "packet": "ZTCBgAABAAQAAAAAC25vbmV4aXN0ZW50BmRvbWFpbgN4eXoAAAEAAcAMAAEAAQAABwgABGAtU4bADAABAAEAAAcIAARgLVMLwAwAAQABAAAHCAAEYC1S78AMAAEAAQAABwgABGAtUjw=",
+        "absolute_expiry": 1778414996.560655,
+        "soft_ttl": 1778414816.560655,
+        "is_negative": false
+    },
+    "example.com.|1": {
+        "packet": "8oCBgAABAAIAAAAAB2V4YW1wbGUDY29tAAABAAHADAABAAEAAAEXAASsQpPzwAwAAQABAAABFwAEaBQXmg==",
+        "absolute_expiry": 1778413884.575182,
+        "soft_ttl": 1778413856.6751819,
+        "is_negative": false
+    },
+    "github.com.|1": {
+        "packet": "9l6BgAABAAEAAAAABmdpdGh1YgNjb20AAAEAAcAMAAEAAQAAADwABIxSeQM=",
+        "absolute_expiry": 1778413667.2807329,
+        "soft_ttl": 1778413661.2807329,
+        "is_negative": false
+    },
+    "google.com.|1": {
+        "packet": "NrqBgAABAAEAAAAABmdvb2dsZQNjb20AAAEAAcAMAAEAAQAAAM0ABMCyGK4=",
+        "absolute_expiry": 1778413813.1279428,
+        "soft_ttl": 1778413792.6279428,
+        "is_negative": false
+    }
+}

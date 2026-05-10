@@ -9,8 +9,28 @@ Make sure you have standard Python 3.
 2. `source venv/bin/activate` 
 3. `pip install -r requirements.txt`
 
-## 🚀 Live Demo & Analytical Report (Recommended)
-We have built an automated, futuristic Terminal UI that explicitly proves all our caching metrics.
+---
+
+## 🌐 1. The Web Dashboard (Website Version - Recommended)
+We created a beautiful frontend graphical interface that connects to our local DNS server and dynamically shows UDP datagram packets being transported and latency calculations!
+
+**How to run it:**
+1. Open terminal and run the background server:
+   ```bash
+   python resolver.py
+   ```
+2. Open a *new* terminal, activate the environment, and run the website:
+   ```bash
+   python web_dashboard.py
+   ```
+3. Open your browser and go to: **[http://127.0.0.1:5000](http://127.0.0.1:5000)**
+
+You can manually type domains (like `google.com`), and watch the terminal inside the website log the UDP packet bites and show the difference in latency for `[MISS]` and `[HIT]`.
+
+---
+
+## 💻 2. Automated Terminal Demo (Terminal Version)
+If you prefer a fast, automated test suite in the console, we built a futuristic Terminal UI that explicitly proves all our caching metrics.
 
 Simply run:
 ```bash
@@ -21,12 +41,14 @@ This single script will boot up the DNS server automatically and run our visual 
 **What it Demonstrates:**
 1. **Cold Cache Behavior (MISS)**: First queries organically hit the simulated internet and log standard upstream fetch latencies.
 2. **Warm Cache Behavior (HIT)**: Identical subsequent queries return from our Python RAM dictionary instantly, heavily reducing query time.
-3. **Negative Caching (NXDOMAIN)**: Unresolved domains (`nonexistent.domain.xyz`) correctly return their status and fetch time is cached too.
-4. **TTL Expiry Cycle**: Requests our test domain `expiry.test.lcl` (mocked with a strong 3-second TTL). The system demonstrates a cache HIT, forces a 4-second waiting queue, and then requests it again to explicitly prove the Absolute Expiry (`abs_expiry`) correctly purged it from memory and resulted in a refetch (MISS).
-5. **Efficiency Metrics (Analytical Report)**: Prints out a metric tracker proving the exact latency reduction achieved using real-time Python timers (`time.perf_counter()`).
+3. **Negative Caching (NXDOMAIN)**: Unresolved domains (`nonexistent.domain.xyz`) correctly return.
+4. **TTL Expiry Cycle**: Tests `expiry.test.lcl` (mocked with a strong 3-second TTL). The system demonstrates a cache HIT, forces a 4-second wait, and requests it again to prove it correctly purged from memory (MISS).
+5. **Efficiency Metrics**: Prints out a metric tracker proving the exact latency reduction achieved using real-time timers.
 
-## 🛠 Running the Resolver Manually
-If you want to run the server as a raw daemon to debug it on your own without the UI:
+---
+
+## 🛠 3. Running the Resolver Manually
+If you want to run the server as a raw daemon to debug it on your own without any UIs:
 ```bash
 python resolver.py
 ```
