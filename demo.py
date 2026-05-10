@@ -16,9 +16,15 @@ import dns.rdataclass
 import dns.rdatatype
 import dns.rrset
 
+import policy as policy_mod
 import protocol
+import stats as stats_mod
 import utils
 from server import run_udp_server
+
+
+def _embedded_upstream(upstream: str, timeout: float) -> protocol.UpstreamConfig:
+    return protocol.UpstreamConfig(upstream=upstream, timeout=timeout, transport="udp")
 
 
 async def _udp_query_local(port: int, qname: str, rdtype: str) -> dns.message.Message:
@@ -32,12 +38,15 @@ async def _udp_query_local(port: int, qname: str, rdtype: str) -> dns.message.Me
 
 async def scenario_cold_warm(*, upstream: str, timeout: float, domain: str) -> None:
     utils.console.print("\n[bold]Scenario 1–2:[/bold] cold cache → warm repeat")
-    transport = await run_udp_server(
+    transport, _cache = await run_udp_server(
         bind="127.0.0.1",
         port=0,
-        upstream=upstream,
-        timeout=timeout,
+        upstream_cfg=_embedded_upstream(upstream, timeout),
         demo_max_ttl_sec=None,
+        max_positive_entries=None,
+        max_negative_entries=None,
+        policy=policy_mod.PolicyEngine.empty(),
+        resolver_stats=stats_mod.ResolverStats(),
     )
     port = transport.get_extra_info("sockname")[1]
     try:
@@ -80,10 +89,11 @@ async def scenario_tcp_fallback_injected() -> None:
     def fake_tcp(*_args, **_kwargs):  # noqa: ANN001
         return full
 
+    cfg = protocol.UpstreamConfig(upstream="192.0.2.1", timeout=2.0, transport="udp")
     with patch.object(protocol.dns.query, "udp", side_effect=fake_udp), patch.object(
         protocol.dns.query, "tcp", side_effect=fake_tcp
     ):
-        res = await protocol.query_upstream(q, upstream="192.0.2.1", timeout=2.0)
+        res = await protocol.query_upstream(q, config=cfg)
 
     assert res is not None
     assert res.used_tcp_fallback is True
@@ -98,12 +108,15 @@ async def scenario_ttl_expiry(*, upstream: str, timeout: float, domain: str, cap
         f"\n[bold]Scenario 4:[/bold] TTL expiry via demo TTL cap={cap}s "
         f"(sleep {pause:.1f}s between queries)"
     )
-    transport = await run_udp_server(
+    transport, _cache = await run_udp_server(
         bind="127.0.0.1",
         port=0,
-        upstream=upstream,
-        timeout=timeout,
+        upstream_cfg=_embedded_upstream(upstream, timeout),
         demo_max_ttl_sec=cap,
+        max_positive_entries=None,
+        max_negative_entries=None,
+        policy=policy_mod.PolicyEngine.empty(),
+        resolver_stats=stats_mod.ResolverStats(),
     )
     port = transport.get_extra_info("sockname")[1]
     try:

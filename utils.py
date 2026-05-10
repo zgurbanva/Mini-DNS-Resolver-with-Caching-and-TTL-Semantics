@@ -1,8 +1,11 @@
-"""Rich-backed logging with consistent request tags and latency (milliseconds)."""
+"""Rich-backed logging plus optional JSON lines and trace diagnostics."""
 
 from __future__ import annotations
 
+import json
+import sys
 import time
+from typing import Any
 
 from rich.console import Console
 from rich.text import Text
@@ -13,6 +16,30 @@ TAG_HIT = "[CACHE_HIT]"
 TAG_MISS = "[CACHE_MISS]"
 TAG_TCP = "[TCP_FALLBACK]"
 TAG_ERROR = "[ERROR]"
+
+_json_logs = False
+_trace = False
+
+
+def configure(*, json_logs: bool = False, trace: bool = False) -> None:
+    global _json_logs, _trace
+    _json_logs = json_logs
+    _trace = trace
+
+
+def emit_json_event(payload: dict[str, Any]) -> None:
+    if not _json_logs:
+        return
+    line = json.dumps(payload, separators=(",", ":"), default=str)
+    sys.stdout.write(line + "\n")
+    sys.stdout.flush()
+
+
+def log_trace(message: str, **fields: Any) -> None:
+    if not _trace:
+        return
+    parts = " ".join(f"{k}={v}" for k, v in fields.items())
+    console.print(Text(f"[TRACE] {message} {parts}".strip(), style="dim"))
 
 
 def elapsed_ms(t0: float) -> float:
@@ -92,6 +119,22 @@ def log_tcp_fallback(
     if extra:
         line.append(f" {extra}")
     console.print(line)
+
+
+def log_policy_block(
+    *,
+    latency_ms: float,
+    qname: str | None = None,
+    qtype: str | None = None,
+) -> None:
+    t = Text()
+    t.append("[POLICY] ", style="bold red")
+    t.append(f"blocked {latency_ms:.2f}ms", style="white")
+    if qname:
+        t.append(f" qname={qname}", style="white")
+    if qtype:
+        t.append(f" qtype={qtype}", style="white")
+    console.print(t)
 
 
 def log_error(
